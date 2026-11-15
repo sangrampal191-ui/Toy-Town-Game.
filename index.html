@@ -1,159 +1,802 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Toy Town Game</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+<title>Toy Town: Midnight Mayhem</title>
 
-    body {
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-      background: #87ceeb;
-    }
+<style>
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
 
-    #game {
-      width: 100vw;
-      height: 100vh;
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(#87ceeb 0%, #bfe9ff 55%, #6fcf5f 55%, #4caf50 100%);
-    }
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+  background: #151525;
+}
 
-    .title {
-      position: absolute;
-      top: 18px;
-      width: 100%;
-      text-align: center;
-      color: white;
-      font-size: 28px;
-      font-weight: bold;
-      text-shadow: 2px 2px 4px #333;
-    }
+#game {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      #162238 0%,
+      #334764 55%,
+      #2d2430 55%,
+      #211b24 100%
+    );
+}
 
-    #score {
-      position: absolute;
-      top: 70px;
-      left: 20px;
-      background: white;
-      padding: 10px 16px;
-      border-radius: 20px;
-      font-weight: bold;
-    }
+#title {
+  position: absolute;
+  top: 15px;
+  width: 100%;
+  text-align: center;
+  color: white;
+  font-size: clamp(28px, 8vw, 46px);
+  font-weight: bold;
+  text-shadow: 3px 3px 0 #000;
+  z-index: 20;
+}
 
-    #player {
-      position: absolute;
-      width: 55px;
-      height: 70px;
-      left: 45%;
-      bottom: 60px;
-    }
+#hud {
+  position: absolute;
+  top: 80px;
+  left: 15px;
+  background: white;
+  color: #222;
+  padding: 10px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  z-index: 20;
+}
 
-    .head {
-      width: 38px;
-      height: 38px;
-      background: #ffd2a6;
-      border-radius: 50%;
-      margin: auto;
-      border: 2px solid #333;
-    }
+#event {
+  position: absolute;
+  top: 80px;
+  right: 15px;
+  background: #ffd52e;
+  color: #222;
+  padding: 10px 15px;
+  border-radius: 15px;
+  font-weight: bold;
+  display: none;
+  z-index: 30;
+}
 
-    .body {
-      width: 46px;
-      height: 35px;
-      background: #ff5252;
-      margin: -2px auto;
-      border-radius: 12px 12px 5px 5px;
-      border: 2px solid #333;
-    }
+/* Giant toy shop shelves */
+.shelf {
+  position: absolute;
+  background: linear-gradient(#9b5a31, #62351d);
+  border: 5px solid #3d2112;
+  border-radius: 8px;
+  box-shadow: 0 7px 0 rgba(0,0,0,.25);
+}
 
-    .toy {
-      position: absolute;
-      width: 48px;
-      height: 48px;
-      background: #ffd43b;
-      border: 3px solid #333;
-      border-radius: 50%;
-    }
-
-    .toy::after {
-      content: "★";
-      font-size: 30px;
-      position: absolute;
-      left: 7px;
-      top: 3px;
-      color: #ff7043;
-    }
-
-    .controls {
-      position: absolute;
-      bottom: 15px;
-      width: 100%;
-      text-align: center;
-    }
-
-    button {
-      border: none;
-      border-radius: 50%;
-      width: 58px;
-      height: 58px;
-      margin: 5px;
-      font-size: 24px;
-      background: white;
-    }
-  </style>
+.shelf::after {
+  content: "🧸 🚗 🪀";
+  position: absolute;
+  top: -32px;
+  left: 5px;
+  font-size: 22px;
+  white-space: nowrap;
+}
+</style>
 </head>
 
 <body>
-  <div id="game">
-    <div class="title">TOY TOWN</div>
-    <div id="score">⭐ Battery Cores: 0</div>
 
-    <div id="player">
-      <div class="head"></div>
-      <div class="body"></div>
-    </div>
+<div id="game">
 
-    <div class="controls">
-      <button onclick="movePlayer(-25)">⬅️</button>
-      <button onclick="movePlayer(25)">➡️</button>
-    </div>
+  <div id="title">TOY TOWN</div>
+
+  <div id="hud">
+    🔋 Battery Cores:
+    <span id="score">0</span> / 8
   </div>
 
-  <script>
-    let score = 0;
-    let playerX = window.innerWidth * 0.45;
+  <div id="event"></div>
 
-    const player = document.getElementById("player");
-    const scoreText = document.getElementById("score");
-    const game = document.getElementById("game");
+  <!-- Giant toy shop shelves -->
+  <div class="shelf"
+       style="left:5%; top:28%; width:32%; height:55px;">
+  </div>
 
-    function movePlayer(amount) {
-      playerX += amount;
-      playerX = Math.max(0, Math.min(window.innerWidth - 60, playerX));
-      player.style.left = playerX + "px";
+  <div class="shelf"
+       style="right:5%; top:42%; width:30%; height:55px;">
+  </div>
+
+  <div class="shelf"
+       style="left:30%; top:58%; width:40%; height:50px;">
+  </div>
+
+/* ===== PLAYER ===== */
+#player {
+  position: absolute;
+  width: 52px;
+  height: 72px;
+  z-index: 10;
+  bottom: 90px;
+  left: 50%;
+}
+
+.head {
+  width: 36px;
+  height: 36px;
+  margin: auto;
+  background: #ffd0a0;
+  border: 4px solid #29232d;
+  border-radius: 50%;
+}
+
+.body {
+  width: 46px;
+  height: 34px;
+  margin: -2px auto 0;
+  background: #ff4f5d;
+  border: 4px solid #29232d;
+  border-radius: 13px 13px 5px 5px;
+}
+
+.leg {
+  position: absolute;
+  bottom: 0;
+  width: 16px;
+  height: 18px;
+  background: #334866;
+  border: 3px solid #29232d;
+  border-radius: 4px;
+}
+
+.leg.left {
+  left: 8px;
+}
+
+.leg.right {
+  right: 8px;
+}
+
+/* ===== BATTERY CORES ===== */
+.core {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 35% 30%,
+    #fff9b0,
+    #ffd229 55%,
+    #e88600
+  );
+  border: 4px solid #573900;
+  box-shadow: 0 0 16px #ffe55a;
+  z-index: 6;
+  animation: floatCore 1s infinite alternate;
+}
+
+.core::after {
+  content: "⚡";
+  position: absolute;
+  font-size: 24px;
+  left: 7px;
+  top: 3px;
+}
+
+@keyframes floatCore {
+  from {
+    transform: translateY(-4px) rotate(-5deg);
+  }
+
+  to {
+    transform: translateY(5px) rotate(5deg);
+  }
+}
+
+<!-- Player -->
+<div id="player">
+  <div class="head"></div>
+  <div class="body"></div>
+  <div class="leg left"></div>
+  <div class="leg right"></div>
+</div>
+
+<!-- Battery Cores -->
+<div class="core" style="left:12%; top:40%;"></div>
+<div class="core" style="left:45%; top:30%;"></div>
+<div class="core" style="left:75%; top:25%;"></div>
+<div class="core" style="left:25%; top:70%;"></div>
+<div class="core" style="left:65%; top:68%;"></div>
+<div class="core" style="left:85%; top:55%;"></div>
+<div class="core" style="left:40%; top:48%;"></div>
+<div class="core" style="left:55%; top:75%;"></div>
+
+<style>
+#controls {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 25px;
+  z-index: 30;
+}
+
+.control-btn {
+  width: 80px;
+  height: 65px;
+  border: none;
+  border-radius: 20px;
+  font-size: 32px;
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 5px 0 #888;
+}
+
+.control-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #888;
+}
+</style>
+
+<div id="controls">
+  <button class="control-btn" id="leftBtn">⬅️</button>
+  <button class="control-btn" id="rightBtn">➡️</button>
+</div>
+
+<script>
+const player = document.getElementById("player");
+let playerX = window.innerWidth / 2 - 26;
+let moveLeft = false;
+let moveRight = false;
+
+function movePlayer() {
+  if (moveLeft) playerX -= 5;
+  if (moveRight) playerX += 5;
+
+  playerX = Math.max(0, Math.min(window.innerWidth - 52, playerX));
+  player.style.left = playerX + "px";
+
+  requestAnimationFrame(movePlayer);
+}
+
+function startMove(direction) {
+  if (direction === "left") moveLeft = true;
+  if (direction === "right") moveRight = true;
+}
+
+function stopMove() {
+  moveLeft = false;
+  moveRight = false;
+}
+
+const leftBtn = document.getElementById("leftBtn");
+const rightBtn = document.getElementById("rightBtn");
+
+leftBtn.addEventListener("pointerdown", () => startMove("left"));
+rightBtn.addEventListener("pointerdown", () => startMove("right"));
+
+leftBtn.addEventListener("pointerup", stopMove);
+rightBtn.addEventListener("pointerup", stopMove);
+leftBtn.addEventListener("pointerleave", stopMove);
+rightBtn.addEventListener("pointerleave", stopMove);
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft") moveLeft = true;
+  if (e.key === "ArrowRight") moveRight = true;
+});
+
+document.addEventListener("keyup", stopMove);
+
+player.style.left = playerX + "px";
+movePlayer();
+</script>
+
+<script>
+let score = 0;
+const scoreText = document.getElementById("score");
+const cores = document.querySelectorAll(".core");
+
+function checkCoreCollection() {
+  const playerBox = player.getBoundingClientRect();
+
+  cores.forEach((core) => {
+    if (core.dataset.collected === "yes") return;
+
+    const coreBox = core.getBoundingClientRect();
+
+    const hit =
+      playerBox.left < coreBox.right &&
+      playerBox.right > coreBox.left &&
+      playerBox.top < coreBox.bottom &&
+      playerBox.bottom > coreBox.top;
+
+    if (hit) {
+      core.dataset.collected = "yes";
+      core.style.display = "none";
+      score++;
+      scoreText.textContent = score;
+
+      if (score === cores.length) {
+        setTimeout(() => {
+          alert("🎉 You collected all Battery Cores! Toy Town is powered up!");
+        }, 200);
+      }
     }
+  });
 
-    function createToy() {
-      const toy = document.createElement("div");
-      toy.className = "toy";
+  requestAnimationFrame(checkCoreCollection);
+}
 
-      toy.style.left = Math.random() * (window.innerWidth - 60) + "px";
-      toy.style.top = 150 + Math.random() * (window.innerHeight - 300) + "px";
+checkCoreCollection();
+</script>
 
-      toy.onclick = function() {
-        score++;
-        scoreText.innerHTML = "⭐ Battery Cores: " + score;
-        toy.remove();
-        setTimeout(createToy, 500);
-      };
+<style>
+#train {
+  position: absolute;
+  bottom: 115px;
+  left: -220px;
+  width: 210px;
+  height: 70px;
+  display: flex;
+  align-items: flex-end;
+  z-index: 7;
+}
 
-      game.appendChild(toy);
-    }
+.engine {
+  position: relative;
+  width: 85px;
+  height: 52px;
+  background: #e74747;
+  border: 4px solid #35232a;
+  border-radius: 12px;
+}
 
-    for (let i = 0; i < 5; i++) createToy();
-  </script>
+.engine::before {
+  content: "🚂";
+  position: absolute;
+  font-size: 42px;
+  left: 18px;
+  top: 0;
+}
+
+.wagon {
+  width: 110px;
+  height: 44px;
+  margin-left: 5px;
+  background: #4c9be8;
+  border: 4px solid #253444;
+  border-radius: 10px;
+}
+
+.wagon::after {
+  content: "🧸";
+  font-size: 30px;
+  display: block;
+  text-align: center;
+  padding-top: 4px;
+}
+
+.wheel {
+  position: absolute;
+  bottom: -12px;
+  width: 20px;
+  height: 20px;
+  background: #222;
+  border: 3px solid #777;
+  border-radius: 50%;
+}
+
+/* Train track */
+#track {
+  position: absolute;
+  bottom: 108px;
+  left: 0;
+  width: 100%;
+  height: 12px;
+  background: repeating-linear-gradient(
+    90deg,
+    #3b2b25 0,
+    #3b2b25 25px,
+    #8b6a55 25px,
+    #8b6a55 32px
+  );
+}
+</style>
+
+<div id="track"></div>
+
+<div id="train">
+  <div class="engine">
+    <div class="wheel" style="left:8px;"></div>
+    <div class="wheel" style="right:8px;"></div>
+  </div>
+
+  <div class="wagon">🧸 🚗</div>
+</div>
+
+<script>
+const train = document.getElementById("train");
+let trainX = -220;
+
+function moveTrain() {
+  trainX += 2;
+
+  if (trainX > window.innerWidth + 30) {
+    trainX = -220;
+  }
+
+  train.style.left = trainX + "px";
+  requestAnimationFrame(moveTrain);
+}
+
+moveTrain();
+</script>
+
+<style>
+.tunnel {
+  position: absolute;
+  bottom: 115px;
+  width: 85px;
+  height: 75px;
+  background: #16131c;
+  border: 8px solid #8a5736;
+  border-bottom: none;
+  border-radius: 50px 50px 0 0;
+  z-index: 6;
+  box-shadow: inset 0 0 18px #000;
+}
+
+#tunnelLeft {
+  left: 12px;
+}
+
+#tunnelRight {
+  right: 12px;
+}
+
+.tunnel::after {
+  content: "SECRET";
+  position: absolute;
+  top: -28px;
+  left: 2px;
+  color: #ffe04b;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+</style>
+
+<div id="tunnelLeft" class="tunnel"></div>
+<div id="tunnelRight" class="tunnel"></div>
+
+<script>
+const tunnelLeft = document.getElementById("tunnelLeft");
+const tunnelRight = document.getElementById("tunnelRight");
+
+let tunnelReady = true;
+
+function checkTunnels() {
+  const playerBox = player.getBoundingClientRect();
+  const leftBox = tunnelLeft.getBoundingClientRect();
+  const rightBox = tunnelRight.getBoundingClientRect();
+
+  const hitLeft =
+    playerBox.left < leftBox.right &&
+    playerBox.right > leftBox.left &&
+    playerBox.top < leftBox.bottom &&
+    playerBox.bottom > leftBox.top;
+
+  const hitRight =
+    playerBox.left < rightBox.right &&
+    playerBox.right > rightBox.left &&
+    playerBox.top < rightBox.bottom &&
+    playerBox.bottom > rightBox.top;
+
+  if (tunnelReady && hitLeft) {
+    tunnelReady = false;
+    playerX = window.innerWidth - 110;
+    player.style.left = playerX + "px";
+
+    setTimeout(() => tunnelReady = true, 800);
+  }
+
+  if (tunnelReady && hitRight) {
+    tunnelReady = false;
+    playerX = 70;
+    player.style.left = playerX + "px";
+
+    setTimeout(() => tunnelReady = true, 800);
+  }
+
+  requestAnimationFrame(checkTunnels);
+}
+
+checkTunnels();
+</script>
+
+<style>
+.dark-mode {
+  filter: brightness(0.35);
+}
+
+.chaos-shake {
+  animation: shake 0.4s infinite;
+}
+
+@keyframes shake {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(4px, -2px); }
+  50% { transform: translate(-4px, 2px); }
+  75% { transform: translate(3px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+</style>
+
+<script>
+const eventBox = document.getElementById("event");
+
+function showChaosEvent() {
+  const events = [
+    "🌙 LIGHTS OFF!",
+    "⚡ SPEED BOOST!",
+    "🌀 TOY TOWN SHAKE!"
+  ];
+
+  const selected =
+    events[Math.floor(Math.random() * events.length)];
+
+  eventBox.textContent = selected;
+  eventBox.style.display = "block";
+
+  if (selected.includes("LIGHTS")) {
+    game.classList.add("dark-mode");
+
+    setTimeout(() => {
+      game.classList.remove("dark-mode");
+    }, 4000);
+  }
+
+  if (selected.includes("SHAKE")) {
+    game.classList.add("chaos-shake");
+
+    setTimeout(() => {
+      game.classList.remove("chaos-shake");
+    }, 2500);
+  }
+
+  if (selected.includes("SPEED")) {
+    const oldSpeed = 5;
+
+    window.chaosSpeed = 10;
+
+    setTimeout(() => {
+      window.chaosSpeed = oldSpeed;
+    }, 4000);
+  }
+
+  setTimeout(() => {
+    eventBox.style.display = "none";
+  }, 3500);
+}
+
+setInterval(showChaosEvent, 12000);
+</script>
+
+<style>
+#gameMessage {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  z-index: 100;
+}
+
+.messageBox {
+  width: 85%;
+  max-width: 400px;
+  padding: 25px;
+  text-align: center;
+  background: white;
+  color: #222;
+  border-radius: 25px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.5);
+}
+
+.messageBox h2 {
+  margin-top: 0;
+  font-size: 28px;
+}
+
+#restartBtn {
+  border: none;
+  background: #ffcf32;
+  color: #222;
+  padding: 14px 24px;
+  border-radius: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* जीत का message */
+</style>
+
+<div id="gameMessage">
+  <div class="messageBox">
+    <h2 id="messageTitle">🏆 YOU WIN!</h2>
+    <p id="messageText">
+      You collected all Battery Cores and powered up Toy Town!
+    </p>
+    <button id="restartBtn">🔄 Play Again</button>
+  </div>
+</div>
+
+<script>
+const gameMessage = document.getElementById("gameMessage");
+const restartBtn = document.getElementById("restartBtn");
+let gameWon = false;
+
+function winGame() {
+  if (gameWon) return;
+
+  gameWon = true;
+  moveLeft = false;
+  moveRight = false;
+
+  gameMessage.style.display = "flex";
+}
+
+restartBtn.addEventListener("click", () => {
+  location.reload();
+});
+
+/* Score check */
+setInterval(() => {
+  if (score >= 8 && !gameWon) {
+    winGame();
+  }
+}, 200);
+</script>
+
+<style>
+.toyBox {
+  position: absolute;
+  width: 58px;
+  height: 58px;
+  background: linear-gradient(135deg, #ff5b5b, #c92f2f);
+  border: 4px solid #682020;
+  border-radius: 10px;
+  box-shadow: 0 6px 0 rgba(0,0,0,.25);
+  z-index: 4;
+}
+
+.toyBox::after {
+  content: "★";
+  color: #ffd83d;
+  font-size: 30px;
+  position: absolute;
+  left: 12px;
+  top: 8px;
+}
+
+.ball {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  background: #ffcf32;
+  border: 4px solid #9b6810;
+  border-radius: 50%;
+  z-index: 4;
+  animation: bounceBall 1s infinite alternate;
+}
+
+@keyframes bounceBall {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-18px);
+  }
+}
+</style>
+
+<!-- Extra Toy Shop Obstacles -->
+<div class="toyBox" style="left:15%; bottom:180px;"></div>
+<div class="toyBox" style="left:72%; bottom:230px;"></div>
+<div class="toyBox" style="left:45%; bottom:320px;"></div>
+
+<div class="ball" style="left:30%; bottom:150px;"></div>
+<div class="ball" style="right:18%; bottom:330px;"></div>
+
+<style>
+#startScreen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    rgba(20, 30, 50, 0.92),
+    rgba(50, 25, 55, 0.92)
+  );
+  text-align: center;
+}
+
+.startBox {
+  width: 85%;
+  max-width: 420px;
+  padding: 30px 20px;
+  background: white;
+  color: #222;
+  border-radius: 25px;
+  box-shadow: 0 10px 35px rgba(0,0,0,.5);
+}
+
+.startBox h1 {
+  margin: 0 0 12px;
+  font-size: 32px;
+}
+
+.startBox p {
+  line-height: 1.5;
+}
+
+#startBtn {
+  border: none;
+  background: #ffcf32;
+  color: #222;
+  padding: 15px 28px;
+  border-radius: 18px;
+  font-size: 19px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+#startBtn:active {
+  transform: scale(.96);
+}
+</style>
+
+<div id="startScreen">
+  <div class="startBox">
+    <h1>🧸 TOY TOWN</h1>
+    <h2>Midnight Mayhem!</h2>
+    <p>
+      Collect all 8 Battery Cores 🔋<br>
+      Watch out for the Toy Train 🚂<br>
+      Use the Secret Tunnels 🕳️
+    </p>
+    <button id="startBtn">▶ START GAME</button>
+  </div>
+</div>
+
+<script>
+const startScreen = document.getElementById("startScreen");
+const startBtn = document.getElementById("startBtn");
+
+startBtn.addEventListener("click", () => {
+  startScreen.style.display = "none";
+});
+
+/* Final window resize protection */
+window.addEventListener("resize", () => {
+  if (playerX > window.innerWidth - 52) {
+    playerX = window.innerWidth - 52;
+    player.style.left = playerX + "px";
+  }
+});
+</script>
+</div>
 </body>
 </html>
